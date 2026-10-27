@@ -21,4 +21,16 @@ Options: `python classify.py comments-v2.json` for another file, `--model clef-f
 
 ## What I felt about doing this
 
-<!-- Write this part yourself: a few honest lines about the task. -->
+The coding part went quickly with the AI assistant: the program, the HTML report and the tests were
+working in well under an hour. The interesting part was writing the label descriptions for Clef. How
+well you describe "toxic" and "spam" for this particular forum (Hinglish, blunt code reviews, apologies)
+decides how many mistakes it makes.
+
+The biggest lesson was comparing the two models. `clef` agreed with me on all 100 comments, but
+`clef-flash` missed two toxic ones, and both had low confidence. So the confidence score really is a
+good guide to which answers a human should check. I also realised I wrote the descriptions after
+reading these comments, so the result probably looks better than it would on new comments.
+`comments-v2.json` would be a fairer test.
+
+Overall it felt like a realistic preview of the TA job: the AI does the bulk of the work, and the value
+is in checking it carefully.
