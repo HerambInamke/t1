@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ---------- Tokens ---------- */
+    /* Label colours checked for colour-blind separation in both themes. Acceptable is
+       neutral on purpose: it is the majority, and the flagged labels should stand out. */
+    :root {
+      --paper: #f5f6f8;
+      --surface: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --rule: #e5e7eb;
+      --focus: #2a78d6;
+
+      --acceptable: #9ca3af;
+      --toxic: #e34948;
+      --spam: #6250d6;
+
+      --font: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --text-sm: 0.8125rem;
+      --text-base: 0.9375rem;
+      --text-xl: 1.5rem;
+      --radius: 8px;
+      --measure: 70ch;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #111418;
+        --surface: #1a1d23;
+        --ink: #e8eaed;
+        --muted: #9aa0a6;
+        --rule: #2c3038;
+        --focus: #3987e5;
+        --acceptable: #6b7280;
+        --toxic: #e66767;
+        --spam: #9085e9;
+      }
+    }
+
+    /* ---------- Base ---------- */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: var(--text-base)/1.55 var(--font);
+      -webkit-font-smoothing: antialiased;
+    }
+    .page { max-width: 1040px; margin: 0 auto; padding: 40px 16px 64px; }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px; overflow: hidden;
+      clip: rect(0 0 0 0); white-space: nowrap;
+    }
+    .panel { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); }
+
+    /* ---------- Header ---------- */
+    .title { font-size: var(--text-xl); font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+    .subtitle { color: var(--muted); margin: 4px 0 24px; }
+
+    /* ---------- Summary: donut + legend ---------- */
+    .summary { display: flex; flex-wrap: wrap; align-items: center; gap: 32px; padding: 24px; }
+    .donut { position: relative; width: 180px; height: 180px; flex: none; }
+    .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .donut circle { fill: none; stroke-width: 26; cursor: pointer; }
+    .donut circle.track { stroke: var(--rule); cursor: default; }
+    .donut circle:hover, .donut circle.active { stroke-width: 32; }
+    .donut-centre {
+      position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
+      pointer-events: none;
+    }
+    .donut-centre b { font-size: 2rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+    .donut-centre span { color: var(--muted); font-size: var(--text-sm); }
+
+    .legend { flex: 1 1 260px; max-width: 440px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    .legend th, .legend td { padding: 10px 8px; text-align: left; border-bottom: 1px solid var(--rule); }
+    .legend thead th { color: var(--muted); font-size: var(--text-sm); font-weight: 500; }
+    .legend tbody tr:last-child td, .legend tbody tr:last-child th { border-bottom: 0; }
+    .legend .num { text-align: right; }
+    .legend tbody th { font-weight: 500; }
+    .legend tbody tr { cursor: pointer; }
+    .legend tbody tr:hover { background: var(--paper); }
+    .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 10px; vertical-align: baseline; }
+    .swatch.acceptable { background: var(--acceptable); }
+    .swatch.toxic { background: var(--toxic); }
+    .swatch.spam { background: var(--spam); }
+
+    .tooltip {
+      position: fixed; z-index: 10; pointer-events: none;
+      padding: 6px 10px; border-radius: 6px; font-size: var(--text-sm);
+      background: var(--ink); color: var(--surface);
+    }
+
+    /* ---------- Toolbar ---------- */
+    .toolbar {
+      position: sticky; top: 0; z-index: 2;
+      display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+      margin-top: 24px; padding: 12px 0; background: var(--paper);
+      border-bottom: 1px solid var(--rule);
+    }
+    .filters {
+      display: inline-flex; flex-wrap: wrap; border: 1px solid var(--rule); border-radius: var(--radius);
+      margin: 0; padding: 2px; background: var(--surface);
+    }
+    .filters label { padding: 5px 12px; border-radius: 6px; cursor: pointer; color: var(--muted); }
+    .filters label:hover { color: var(--ink); }
+    .filters input { position: absolute; opacity: 0; }
+    .filters label:has(input:checked) { background: var(--paper); color: var(--ink); font-weight: 500; }
+    .filters label:has(input:focus-visible) { outline: 2px solid var(--focus); }
+    .filters .count { margin-left: 6px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .toolbar select, .toolbar input[type="search"] {
+      font: inherit; color: inherit; background: var(--surface);
+      border: 1px solid var(--rule); border-radius: var(--radius); padding: 6px 10px;
+    }
+    .toolbar input[type="search"] { flex: 1 1 200px; }
+    .showing { color: var(--muted); font-size: var(--text-sm); margin: 12px 0; }
+
+    /* ---------- Comment list ---------- */
+    .list { list-style: none; margin: 0; padding: 0; }
+    .entry {
+      display: grid; grid-template-columns: 150px 1fr; gap: 24px;
+      padding: 16px 20px; margin-bottom: 8px;
+      border-left: 3px solid transparent;
+    }
+    .entry.toxic { border-left-color: var(--toxic); }
+    .entry.spam { border-left-color: var(--spam); }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-weight: 500; font-size: var(--text-sm);
+    }
+    .badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+    .entry.acceptable .badge { color: var(--muted); }
+    .entry.acceptable .badge::before { background: var(--acceptable); }
+    .entry.toxic .badge::before { background: var(--toxic); }
+    .entry.spam .badge::before { background: var(--spam); }
+    .confidence { color: var(--muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; margin-top: 2px; }
+    .unsure-note { display: none; margin-left: 4px; color: var(--ink); font-weight: 500; }
+    .entry.unsure .unsure-note { display: inline; }
+    .probs { display: flex; gap: 2px; height: 4px; margin-top: 10px; }
+    .probs span { border-radius: 2px; }
+    .probs .acceptable { background: var(--acceptable); }
+    .probs .toxic { background: var(--toxic); }
+    .probs .spam { background: var(--spam); }
+
+    .meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; color: var(--muted); font-size: var(--text-sm); }
+    .author { color: var(--ink); font-weight: 500; }
+    .text { margin: 6px 0 0; max-width: var(--measure); overflow-wrap: anywhere; }
+
+    .empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+
+    /* ---------- Small screens ---------- */
+    @media (max-width: 640px) {
+      .page { padding-top: 24px; }
+      .summary { justify-content: center; padding: 16px; }
+      .entry { grid-template-columns: 1fr; gap: 8px; padding: 14px 16px; }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <header>
+      <h1 class="title">Moderation review</h1>
+      <p class="subtitle" id="subtitle"></p>
+    </header>
+
+    <section class="panel summary" aria-labelledby="summary-heading">
+      <h2 class="visually-hidden" id="summary-heading">How Clef labelled the comments</h2>
+      <div class="donut">
+        <svg viewBox="0 0 200 200" id="donut" aria-hidden="true">
+          <circle class="track" cx="100" cy="100" r="70"></circle>
+        </svg>
+        <div class="donut-centre"><b id="total"></b><span>comments</span></div>
+      </div>
+      <!-- The legend is also the chart's data table. -->
+      <table class="legend">
+        <thead><tr><th scope="col">Label</th><th scope="col" class="num">Comments</th><th scope="col" class="num">Share</th></tr></thead>
+        <tbody id="legend"></tbody>
+      </table>
+    </section>
+
+    <div class="toolbar" role="search">
+      <fieldset class="filters" id="filters">
+        <legend class="visually-hidden">Show</legend>
+      </fieldset>
+      <label class="visually-hidden" for="sort">Order</label>
+      <select id="sort">
+        <option value="id">Forum order</option>
+        <option value="confidence">Least confident first</option>
+      </select>
+      <label class="visually-hidden" for="search">Search comments</label>
+      <input type="search" id="search" placeholder="Search text or author">
+    </div>
+
+    <p class="showing" id="showing" aria-live="polite"></p>
+    <ul class="list" id="list"></ul>
+    <p class="empty" id="empty" hidden>No comments match. Clear the search or choose All.</p>
+  </main>
+
+  <div class="tooltip" id="tooltip" hidden></div>
+
+  <!-- One comment. Cloned by the script below for each entry. -->
+  <template id="entry-template">
+    <li class="entry panel">
+      <div class="verdict">
+        <div class="badge"></div>
+        <div class="confidence"></div>
+        <div class="probs" role="img"></div>
+      </div>
+      <div class="body">
+        <div class="meta">
+          <span>#<span class="id"></span> <span class="author"></span> in <span class="thread"></span></span>
+          <time class="posted"></time>
+        </div>
+        <p class="text"></p>
+      </div>
+    </li>
+  </template>
+
+  <!-- Data written by classify.py -->
+  <script type="application/json" id="data">{{data}}</script>
+
+  <script>
+    const DATA = JSON.parse(document.getElementById("data").textContent);
+    const LABELS = ["acceptable", "toxic", "spam"];
+    const isUnsure = (c) => c.confidence < DATA.low;
+    const pct = (x) => Math.round(x * 100) + "%";
+    const capitalise = (s) => s[0].toUpperCase() + s.slice(1);
+    const countOf = (label) => DATA.comments.filter((c) => c.choice === label).length;
+
+    // ---------- Header ----------
+    document.getElementById("subtitle").textContent =
+      `${DATA.course}. Labelled by Clef (${DATA.model}).`;
+
+    // ---------- Donut chart ----------
+    function renderDonut() {
+      const svg = document.getElementById("donut");
+      const circumference = 2 * Math.PI * 70;
+      const total = DATA.comments.length;
+      const tooltip = document.getElementById("tooltip");
+      let offset = 0;
+
+      document.getElementById("total").textContent = total;
+      for (const label of LABELS) {
+        const n = countOf(label);
+        if (!n) continue;
+        const length = (n / total) * circumference;
+        const slice = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        Object.entries({ cx: 100, cy: 100, r: 70 }).forEach(([k, v]) => slice.setAttribute(k, v));
+        slice.style.stroke = `var(--${label})`;
+        slice.dataset.label = label;
+        // 2px gap between slices so neighbouring colours never touch
+        slice.setAttribute("stroke-dasharray", `${Math.max(length - 2, 0)} ${circumference}`);
+        slice.setAttribute("stroke-dashoffset", -offset);
+        offset += length;
+
+        slice.addEventListener("mousemove", (e) => {
+          tooltip.textContent = `${capitalise(label)}: ${n} comments (${pct(n / total)})`;
+          tooltip.style.left = e.clientX + 12 + "px";
+          tooltip.style.top = e.clientY + 12 + "px";
+          tooltip.hidden = false;
+        });
+        slice.addEventListener("mouseleave", () => (tooltip.hidden = true));
+        slice.addEventListener("click", () => setFilter(label));
+        svg.append(slice);
+      }
+    }
+
+    function renderLegend() {
+      const total = DATA.comments.length;
+      const body = document.getElementById("legend");
+      for (const label of LABELS) {
+        const n = countOf(label);
+        const row = document.createElement("tr");
+        row.innerHTML =
+          `<th scope="row"><span class="swatch ${label}"></span>${capitalise(label)}</th>` +
+          `<td class="num">${n}</td><td class="num">${pct(n / total)}</td>`;
+        row.addEventListener("click", () => setFilter(label));
+        body.append(row);
+      }
+    }
+
+    // ---------- Filters ----------
+    function renderFilters() {
+      const options = [
+        ["all", "All", DATA.comments.length],
+        ...LABELS.map((l) => [l, capitalise(l), countOf(l)]),
+        ["unsure", `Unsure`, DATA.comments.filter(isUnsure).length],
+      ];
+      const fieldset = document.getElementById("filters");
+      for (const [value, name, n] of options) {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="radio" name="filter" value="${value}">${name}<span class="count">${n}</span>`;
+        label.querySelector("input").checked = value === "all";
+        if (value === "unsure") label.title = `Confidence under ${DATA.low}`;
+        fieldset.append(label);
+      }
+    }
+
+    function setFilter(value) {
+      document.querySelector(`input[name=filter][value=${value}]`).checked = true;
+      updateList();
+      document.querySelector(".toolbar").scrollIntoView({ behavior: "smooth" });
+    }
+
+    // ---------- Comment list ----------
+    function buildEntry(c) {
+      const li = document.getElementById("entry-template").content.firstElementChild.cloneNode(true);
+      li.classList.add(c.choice);
+      if (isUnsure(c)) li.classList.add("unsure");
+
+      li.querySelector(".badge").textContent = capitalise(c.choice);
+      li.querySelector(".confidence").innerHTML =
+        `Confidence ${c.confidence.toFixed(2)}<span class="unsure-note">Needs a look</span>`;
+
+      const probs = li.querySelector(".probs");
+      const summary = LABELS.map((l) => `${l} ${pct(c.probabilities[l] || 0)}`).join(", ");
+      probs.setAttribute("aria-label", summary);
+      probs.title = summary;
+      for (const l of LABELS) {
+        const seg = document.createElement("span");
+        seg.className = l;
+        seg.style.flexGrow = c.probabilities[l] || 0;
+        probs.append(seg);
+      }
+
+      li.querySelector(".id").textContent = c.id;
+      li.querySelector(".author").textContent = c.author;
+      li.querySelector(".thread").textContent = c.thread;
+      li.querySelector(".posted").textContent = c.posted_at;
+      li.querySelector(".text").textContent = c.comment;   // textContent: comments are never parsed as HTML
+      return li;
+    }
+
+    const entries = DATA.comments.map((c) => ({ c, el: buildEntry(c) }));
+
+    function updateList() {
+      const filter = document.querySelector("input[name=filter]:checked").value;
+      const order = document.getElementById("sort").value;
+      const query = document.getElementById("search").value.trim().toLowerCase();
+
+      const matches = ({ c }) =>
+        (filter === "all" || c.choice === filter || (filter === "unsure" && isUnsure(c))) &&
+        (!query || (c.comment + " " + c.author).toLowerCase().includes(query));
+      const sorted = [...entries].sort((a, b) =>
+        order === "confidence" ? a.c.confidence - b.c.confidence : a.c.id - b.c.id);
+      const shown = sorted.filter(matches);
+
+      document.getElementById("list").replaceChildren(...shown.map((e) => e.el));
+      document.getElementById("empty").hidden = shown.length > 0;
+      document.getElementById("showing").textContent =
+        `Showing ${shown.length} of ${entries.length} comments`;
+      document.querySelectorAll("#donut circle[data-label]").forEach((s) =>
+        s.classList.toggle("active", s.dataset.label === filter));
+    }
+
+    // ---------- Start ----------
+    renderDonut();
+    renderLegend();
+    renderFilters();
+    document.getElementById("filters").addEventListener("change", updateList);
+    document.getElementById("sort").addEventListener("change", updateList);
+    document.getElementById("search").addEventListener("input", updateList);
+    updateList();
+  </script>
+</body>
+</html>

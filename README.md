@@ -1,5 +1,72 @@
 # Intern task: checking an AI comment moderator
 
+## 🚀 How to run this project
+
+**Requirement: Python 3.8 or newer. No packages to install — only the standard library is used.**
+
+### 1. Add your Cloudflare credentials
+
+**Copy `cloud-flare.sh` to `cloud-flare.local.sh` and put your real account ID and API token in it**
+(the token needs *Workers AI - Read* and *Workers AI - Edit*):
+
+```sh
+cp cloud-flare.sh cloud-flare.local.sh
+```
+
+```sh
+export CLOUDFLARE_ACCOUNT_ID="your-account-id"
+export CLOUDFLARE_API_TOKEN="your-api-token"
+```
+
+**`cloud-flare.local.sh` is git-ignored, so your token is never committed.**
+
+### 2. Run the classifier
+
+**From the project folder, run:**
+
+```sh
+python classify.py
+```
+
+This sends all 100 comments in `comments.json` to Cloudflare's **Clef** model and writes the report.
+Answers are cached in `output/comments.clef.results.json`, so running it again is instant and makes no API calls.
+
+| Command | What it does |
+| --- | --- |
+| **`python classify.py`** | Classify `comments.json` with `clef` |
+| **`python classify.py comments-v2.json`** | Classify another comments file |
+| **`python classify.py --model clef-flash`** | Use the faster, cheaper model |
+| **`python classify.py --fresh`** | Ignore the cache and call the API again |
+| **`python -m unittest`** | Run the offline tests (no credentials needed) |
+
+### 3. See the HTML report
+
+**Open `output/comments.html` in any web browser** — double-click it in your file explorer, or run:
+
+```sh
+start output/comments.html      # Windows
+open output/comments.html       # macOS
+xdg-open output/comments.html   # Linux
+```
+
+**The page shows:**
+- **A donut chart** of how many comments Clef labelled acceptable, toxic and spam. Click a slice to filter.
+- **Every comment with its label, confidence and probabilities.** Toxic and spam comments are marked with a coloured edge.
+- **Filters, search, and a "Least confident first" sort** to find the answers most worth checking.
+
+### Project structure
+
+```
+classify.py               the program: calls Clef, caches answers, writes the report
+templates/report.html     layout, styles and behaviour of the HTML report
+output/                   generated report and cached Clef answers
+tests/test_classify.py    offline tests with the API faked
+comments.json             the 100 comments to classify
+MISTAKES.md               where Clef got it wrong, checked by hand
+```
+
+---
+
 This README is short on purpose. Use AI to research/understand anything not explained
 here: GenWise, Navin Kabra's background, Cloudflare Workers AI, Clef, and so on. That is
 part of the task. The task looks like a programming-heavy task, but it doesn't require you to be a programmer: you can use AI to get the program written (and checked into GitHub). I know enough non-programmers who are able to do that now.
