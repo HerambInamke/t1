@@ -2,9 +2,26 @@
 
 Model: `clef`. Clef labelled 72 comments acceptable, 14 toxic and 14 spam.
 
-## Clear mistakes
+## Mistakes by `clef`
 
-None. After reading all 100 comments, I agree with every label Clef gave.
+None. After reading all 100 comments, I agree with every label `clef` gave.
+
+## Mistakes by the smaller `clef-flash` model
+
+I also ran the faster `clef-flash` model (`python classify.py --model clef-flash`) with the same
+label descriptions. It disagreed with `clef` on two comments, and in both cases `clef-flash` was wrong.
+
+### Comment 27
+- **clef-flash:** acceptable (confidence 0.28). **Right label:** toxic.
+- "Girls in this class only get good marks because sir is soft on them" is a gender stereotype, and
+  it belittles a named classmate. The small model seems to have read it as grading criticism, which
+  is allowed, and missed the sexism.
+
+### Comment 69
+- **clef-flash:** acceptable (confidence 0.34). **Right label:** toxic.
+- "Clueless fellow should go back to school" is a personal insult aimed at the TA. Questioning
+  whether the TA can grade AI projects would be fair criticism, but the insult makes it toxic.
+- Both mistakes had low confidence, so a review that checks answers below 0.5 would have caught them.
 
 ## Borderline comments
 
