@@ -2,6 +2,21 @@
 
 Model: `clef`. Clef labelled 72 comments acceptable, 14 toxic and 14 spam.
 
+## Summary
+
+- **`clef` made no mistakes.** I agree with all 100 of its labels. The HTML report
+  (`output/comments.html`) shows these `clef` results.
+- **The smaller `clef-flash` model made two genuine mistakes.** I ran it on the same 100 comments:
+  - **Comment 27:** clef-flash said acceptable; the right label is toxic. "Girls only get good marks
+    because sir is soft on them" is a gender stereotype aimed at a named classmate.
+  - **Comment 69:** clef-flash said acceptable; the right label is toxic. "Clueless fellow should go
+    back to school" insults the TA.
+- **Both mistakes had low confidence (0.34 or lower),** so a review that checks every answer under
+  0.5 would have caught them. This matches the advice in `CLEF_API.md`: `clef-flash` is faster and
+  cheaper, while `clef` is more accurate on borderline inputs.
+- **The `clef-flash` answers are saved in `output/comments.clef-flash.results.json`,** so the
+  comparison can be checked again without calling the API.
+
 ## Mistakes by `clef`
 
 None. After reading all 100 comments, I agree with every label `clef` gave.
